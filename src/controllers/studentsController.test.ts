@@ -1,20 +1,64 @@
 import { test, expect, beforeEach, describe, vi } from "vitest";
 import { createDbConnection } from "../db/dbConfig";
 import Student from "../models/Student";
+import createError from "http-errors";
+import { Database } from "sqlite3";
 
 beforeEach(async () => {
-    // abrimos a conexão com o banco
     const dbPromise = createDbConnection();
-
-    // aguarda a conexão
     const db = await dbPromise;
-
-    // deletar todos os eventos
     await db.run("DELETE FROM students");
 });
 
-describe("Testes para handler de criação de um evento (createEvent)", async () => {
-    test("Testar se é possível criar um evento válido (mock do método", async () => {
+type StudentWithoutId = Omit<Student, "id">;
+
+const studentsListHandler = async () => {
+    let db: Database = createDbConnection();
+    let studentsList: Student[] = [];
+    let sql = `SELECT * FROM students`;
+
+    const promise = new Promise((resolve, reject) => {
+        db.all(sql, [], (error: Error, rows: Student[]) => {
+            if (error) {
+                throw createError.InternalServerError("Erro interno do Servidor");
+            }
+            rows.forEach((row: Student) => {
+                studentsList.push(row);
+            });
+            resolve(studentsList);
+        });
+    });
+
+    return promise as Promise<Student[]>;
+}
+
+const makeStudent = async (data: StudentWithoutId) => {
+    const promise = new Promise((resolve) => {
+        const db = createDbConnection();
+        const { name, room, shift, year } = data;
+        const student: StudentWithoutId = {
+            name,
+            room,
+            shift,
+            year,
+        };
+
+        const roomToUppercase = student.room.toUpperCase();
+
+        const sql = `INSERT INTO students(name, shift, year, room) VALUES ("${student.name}", "${student.shift}", "${student.year}", "${roomToUppercase}")`;
+
+        db.exec(sql, (error) => {
+            if (!error) {
+                resolve(student);
+            }
+        });
+    });
+
+    await promise;
+};
+
+describe("Testes para handler de criação de estudantes", async () => {
+    test("Testar se é possível criar 3 estudantes", async () => {
         const student1: Student = {
             id: 11,
             name: "Joel",
@@ -39,25 +83,17 @@ describe("Testes para handler de criação de um evento (createEvent)", async ()
             room: "Concur"
         }
 
-        const dbPromise = createDbConnection();
-        const db = await dbPromise;
+        await makeStudent(student1);
+        await makeStudent(student2);
+        await makeStudent(student3);
 
-        const makeStudent = async (student: Student) => {
-            let sql = `INSERT INTO students(name, shift, year, room) VALUES ("${student.name}", "${student.shift}", "${student.year}", "${student.room.toLowerCase()}")`;
+        const students = await studentsListHandler();
 
-            if (student.name && student.shift && student.year && student.room) {
-                db.run(sql)
-            }
-        }
-
-        await makeStudent (student1);
-
-        await makeStudent (student2);
-
-        await makeStudent (student3);
-
-        expect(event).toBeTruthy();
-        expect(spy).toHaveBeenCalled();
-        spy.mockReset();
+        expect(students[0].name).toEqual("Joel")
+        expect(students[1].name).toEqual("Leonardo")
+        expect(students[2].name).toEqual("Cesar")
+        expect(students[0].id).toBeTypeOf("number")
+        expect(students[0]).toHaveProperty('id')
+        expect(students).toHaveLength(3);
     })
 })
