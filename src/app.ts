@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import "./dependency_injection"
 import express from "express";
 import dotenv from "dotenv";
 import studentsRouter from "./routes/studentsRouter";

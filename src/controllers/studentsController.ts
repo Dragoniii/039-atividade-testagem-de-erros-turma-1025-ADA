@@ -109,7 +109,7 @@ const addStudent = async (req: Request, res: Response) => {
     const student: Student = req.body
     const createStudentUseCase = container.resolve(CreateStudentUseCase);
     const newStudent = await createStudentUseCase.execute(student);
-    return newStudent;
+    return res.json(newStudent);
 }
 
 const updateStudent = (req: Request, res: Response) => {
