@@ -105,6 +105,7 @@ const studentDetailsByParams = (req: Request, res: Response) => {
 }
 
 const addStudent = async (req: Request, res: Response) => {
+    console.log('chegou no addstudent');
     const student: Student = req.body
     const createStudentUseCase = container.resolve(CreateStudentUseCase);
     const newStudent = await createStudentUseCase.execute(student);

@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import express from "express";
 import dotenv from "dotenv";
 import studentsRouter from "./routes/studentsRouter";
@@ -7,32 +8,8 @@ import professionalsRouter from "./routes/professionalsRouter";
 dotenv.config();
 
 const app = express();
-
 const port = process.env.PORT || 3000;
-
-const ALLOWED_ORIGIN = "http://localhost:4000";
-
-const corsOptions: CorsOptions = {
-  origin: function (
-    origin: string | undefined,
-    callback: (err: Error | null, allow?: boolean) => void
-  ) {
-    if (!origin) {
-      // Se não há cabeçalho de origem, rejeitamos a requisição
-      callback(new Error("Origin header missing or undefined"));
-      return;
-    }
-
-    if (origin === ALLOWED_ORIGIN) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-};
-
-app.use(cors(corsOptions));
-
+app.use(cors());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
