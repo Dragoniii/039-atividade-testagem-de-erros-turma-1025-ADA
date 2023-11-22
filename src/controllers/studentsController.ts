@@ -1,8 +1,11 @@
 import { Response, Request, NextFunction } from "express";
-import Student from "../models/Student";
+import { container, inject, injectable } from "tsyringe";
 import { createDbConnection } from "../db/dbConfig";
 import { Database } from "sqlite3";
 import logger from "../services/logger";
+import Student from "../models/Student";
+import { CreateStudentUseCase } from "../usecases/CreateStudentUseCase";
+import { DeleteStudentUseCase } from "../usecases/DeleteStudentUseCase";
 
 let db: Database = createDbConnection();
 
@@ -101,34 +104,11 @@ const studentDetailsByParams = (req: Request, res: Response) => {
     );
 }
 
-const addStudent = (req: Request, res: Response) => {
-    logger.info(req);
-
-    let token = req.headers.authorization;
-
-    if (token == "Bearer 12345") {
-        let student: Student = req.body;
-        let roomToUppercase: string = student.room.toUpperCase();
-
-        let sql = `INSERT INTO students(name, shift, year, room) VALUES ("${student.name}", "${student.shift}", "${student.year}", "${roomToUppercase}")`;
-
-        if (student.name && student.shift && student.year && student.room) {
-            db.run(sql,
-                (error: Error) => {
-                    if (error) {
-                        res.end(error.message);
-                    }
-                    res.send(`Student ${student.name} Added`);
-                })
-        } else {
-            res.send("Erro na criação do estudante. Verifique se todos os campos foram preenchidos");
-        }
-    } else {
-        res.sendStatus(403);
-    }
-
-
-
+const addStudent = async (req: Request, res: Response) => {
+    const student: Student = req.body
+    const createStudentUseCase = container.resolve(CreateStudentUseCase);
+    const newStudent = await createStudentUseCase.execute(student);
+    return newStudent;
 }
 
 const updateStudent = (req: Request, res: Response) => {
@@ -165,17 +145,16 @@ const updateStudentBySpecificField = (req: Request, res: Response) => {
     })
 }
 
-const deleteStudentByQuery = (req: Request, res: Response) => {
-    logger.info(req);
-    let id = req.query.id;
-    let sql = `DELETE from students WHERE id="${id}"`;
+const deleteStudentByQuery = async (req: Request, res: Response) => {
+    const id = req.query.id as string | undefined;
 
-    db.all(sql, [], (error: Error) => {
-        if (error) {
-            res.send(error.message);
-        }
-        res.send("Student Deleted");
-    })
+    if (id === undefined) {
+        return res.status(400).json({ error: 'ID parameter is missing or invalid.' });
+    }
+
+    const deleteStudentUseCase = container.resolve(DeleteStudentUseCase);
+    const newStudent = await deleteStudentUseCase.execute(id);
+    return newStudent;
 }
 
 const deleteStudentByParams = (req: Request, res: Response) => {
@@ -201,6 +180,6 @@ export {
     updateStudent,
     updateStudentBySpecificField,
     deleteStudentByQuery,
-    deleteStudentByParams, 
+    deleteStudentByParams,
     studentsListHandler
 };
