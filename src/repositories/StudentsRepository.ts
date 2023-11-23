@@ -31,7 +31,7 @@ export class StudentsRepository implements IStudentsRepository {
         })
 
 
-        return newStudent as unknown as Student;
+        return newStudent as Student;
     }
 
     async deleteStudentById(id: string) {

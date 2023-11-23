@@ -11,7 +11,6 @@ import {
     updateStudentBySpecificField
 } from "../controllers/studentsController";
 
-
 const studentsRouter = Router();
 
 studentsRouter.get("/", studentsList);

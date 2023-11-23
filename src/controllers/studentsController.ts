@@ -26,20 +26,6 @@ const studentsList = (req: Request, res: Response) => {
     );
 }
 
-const studentsListHandler = () => {
-    let studentsList: Student[] = [];
-
-    let sql = `SELECT * FROM students`;
-
-    db.all(sql, [], (error: Error, rows: Student[]) => {
-        if (error) {
-            logger.error(error.message);
-        }
-        rows.forEach((row: Student) => { studentsList.push(row) });
-    }
-    );
-}
-
 const studentsListByYearAndRoom = (req: Request, res: Response) => {
     logger.info(req);
     let studentsList: Student[] = [];
@@ -104,6 +90,7 @@ const addStudent = async (req: Request, res: Response) => {
     const student: Student = req.body
     const createStudentUseCase = container.resolve(CreateStudentUseCase);
     const newStudent = await createStudentUseCase.execute(student);
+    
     return res.json(newStudent);
 }
 
@@ -171,5 +158,4 @@ export {
     updateStudentBySpecificField,
     deleteStudentByQuery,
     deleteStudentByParams,
-    studentsListHandler
 };

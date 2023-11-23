@@ -3,13 +3,14 @@ import "./dependency_injection"
 import express from "express";
 import dotenv from "dotenv";
 import studentsRouter from "./routes/studentsRouter";
-import cors, { CorsOptions } from "cors"; // Middleware para habilitar CORS
+import cors from "cors";
 import professionalsRouter from "./routes/professionalsRouter";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
 app.use(cors());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
