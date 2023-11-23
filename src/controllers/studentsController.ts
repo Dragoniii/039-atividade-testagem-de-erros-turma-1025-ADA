@@ -9,10 +9,6 @@ import { DeleteStudentUseCase } from "../usecases/DeleteStudentUseCase";
 
 let db: Database = createDbConnection();
 
-const studentsRoot = (req: Request, res: Response, next: NextFunction) => {
-    res.sendStatus(201);
-}
-
 const studentsList = (req: Request, res: Response) => {
     let studentsList: Student[] = [];
 
@@ -105,7 +101,6 @@ const studentDetailsByParams = (req: Request, res: Response) => {
 }
 
 const addStudent = async (req: Request, res: Response) => {
-    console.log('chegou no addstudent');
     const student: Student = req.body
     const createStudentUseCase = container.resolve(CreateStudentUseCase);
     const newStudent = await createStudentUseCase.execute(student);
@@ -150,29 +145,23 @@ const deleteStudentByQuery = async (req: Request, res: Response) => {
     const id = req.query.id as string | undefined;
 
     if (id === undefined) {
-        return res.status(400).json({ error: 'ID parameter is missing or invalid.' });
+        return res.status(400).send('Estudante não existe');
     }
 
     const deleteStudentUseCase = container.resolve(DeleteStudentUseCase);
-    const newStudent = await deleteStudentUseCase.execute(id);
-    return newStudent;
+    await deleteStudentUseCase.execute(id);
+    return res.send("Estudante removido com sucesso");
 }
 
-const deleteStudentByParams = (req: Request, res: Response) => {
-    logger.info(req);
-    let id = req.params.id;
-    let sql = `DELETE from students WHERE id="${id}"`;
+const deleteStudentByParams = async (req: Request, res: Response) => {
+    const id = req.params.id 
 
-    db.all(sql, [], (error: Error) => {
-        if (error) {
-            res.send(error.message);
-        }
-        res.send("Student Deleted");
-    })
+    const deleteStudentUseCase = container.resolve(DeleteStudentUseCase);
+    await deleteStudentUseCase.execute(id);
+    return res.send("Estudante removido com sucesso");
 }
 
 export {
-    studentsRoot,
     studentsList,
     studentsListByYearAndRoom,
     studentDetailsByQuery,
